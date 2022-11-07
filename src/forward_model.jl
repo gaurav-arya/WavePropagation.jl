@@ -1,3 +1,5 @@
+using LinearMaps
+
 struct Gop <: LinearMap{Float64}
     fftPSFs::AbstractArray # todo: fix
     objL::Int

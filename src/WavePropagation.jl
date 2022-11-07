@@ -11,10 +11,12 @@ module WavePropagation
     export convolve, convolveT, convolve!, convolveT!
     export incident_field, greens
     export get_model
+    export Gop
 
     include("planned_fft.jl")
     include("fields.jl")
     include("convolve.jl")
     include("scattering.jl")
+    include("forward_model.jl")
 
 end
