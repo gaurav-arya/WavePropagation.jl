@@ -10,20 +10,32 @@ using LinearAlgebra
     objL = 20
     imgL = 10
     PSFs = rand(objL + imgL, objL + imgL, input_channels, output_channels)
-    fftPSFs = mapslices(fft, PSFs; dims=(1,2))
-    G = Gop(fftPSFs, objL, imgL, input_channels, output_channels)
+    G = Gop(PSFs, objL, imgL, input_channels, output_channels)
 
     @test size(G) == (imgL^2 * output_channels, objL^2 * input_channels)
 
-    # Test consistency of out-of-place and in-place, and of transposition
     m, n = size(G)
     u = rand(n)
     v = rand(m)
     vtmp = similar(v)
     utmp = similar(u)
+    # Compare accuracy of output to expected
+    out_expected = zeros(imgL, imgL, output_channels)
+    for i in 1:input_channels
+        for j in 1:output_channels
+            input_slice = reshape(u, objL, objL, input_channels)[:, :, i]
+            kernel = PSFs[:, :, i, j]
+            out_expected[:, :, j] += real.(convolve(input_slice, fft(kernel)))
+        end
+    end
+    out_actual = reshape(G * u, imgL, imgL, output_channels)
+    # @test size(out ≈ out_actual
+            
+    # Test consistency of out-of-place and in-place 
     mul!(vtmp, G, u)
     mul!(utmp, G', v)
     @test vtmp ≈ G * u
     @test utmp ≈ G' * v
+    # Dot product test for transposition
     @test dot(v, G*u) ≈ dot(u, G'*v)
 end

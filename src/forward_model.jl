@@ -9,15 +9,25 @@ struct Gop <: LinearMap{Float64}
     padded::AbstractArray
 end   
 
-# TODO: as usual, type better
-function Gop(fftPSFs, objL, imgL, input_channels, output_channels)
+"""
+    Gop(PSFs, objL, imgL, input_channels, output_channels)
+
+Create a convolutional linear operator with a specified number of input and output channels. 
+The operator takes an input of shape `(objL, objL, input_channels)`
+and gives output of shape `(imgL, imgL, output_channels)`.
+The provided `PSFs` is expected to have shape `(psfL, psfL, input_channels, output_channels)`,
+where `psfL = objL + imgL`.
+Note that the operator expepcts flattened input and output.
+"""
+function Gop(PSFs, objL, imgL, input_channels, output_channels)
     psfL = objL + imgL
-    padded = Array{ComplexF64}(undef, psfL, psfL, input_channels, output_channels)
+    fftPSFs = mapslices(fft, PSFs; dims=(1,2))
+    padded = Array{eltype(fftPSFs)}(undef, psfL, psfL, input_channels, output_channels)
     Gop(fftPSFs, objL, imgL, input_channels, output_channels, padded) 
 end
 
 Base.size(G::Gop) = (G.output_channels * G.imgL^2, G.input_channels * G.objL^2) 
-GopTranspose = LinearMaps.TransposeMap{<:Any, <:Gop} # TODO: make constant
+const GopTranspose = LinearMaps.TransposeMap{<:Any, <:Gop}
     
 function Base.:(*)(G::Gop, uflat::AbstractVector)
     u = reshape(uflat, (G.objL, G.objL, G.input_channels))
@@ -88,6 +98,7 @@ end
 
 # Convert array of arrays to multidimensional array
 # using Zygote-friendly operations
+# TODO: this should be replaced by `stack` once 1.9 is properly released
 function arrarr_to_multi(arrarr)
     outsz = size(arrarr)
     insz = size(arrarr[1])
