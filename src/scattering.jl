@@ -12,13 +12,3 @@ function get_model(order, lb, ub, filename)
     vals = [val(line) for line in eachline(f)]
     chebinterp(vals, lb, ub)
 end
-
-# rrule for Chebyshev polynomial functor. TODO: support chebjacobian (or explicitly don't support it)
-# TODO: support x real 
-function rrule(c::ChebPoly, x::AbstractVector)
-    project_x = ProjectTo(x)
-    y, Δy = chebgradient(c, x)
-    pullback(∂y) = NoTangent(), project_x(∂y * Δy')
-    y, pullback
-end
-
