@@ -23,9 +23,7 @@ function Base.:(*)(G::Gop, uflat::Vector{Float64})
     u = reshape(uflat, (G.objL, G.objL, G.input_channels))
     
     to_y(obj_plane, kernel) = real.(convolve(obj_plane, kernel))
-    # uncomment for non-reverse
-    # utmp = [u[:, :, i_input, i_output] for i_input in 1:G.input_channels, i_output in 1:G.output_channels] # TODO: avoid this
-    utmp = [reverse(u[:, :, i_input, i_output]) for i_input in 1:G.input_channels, i_output in 1:G.output_channels] # TODO: avoid this
+    utmp = [reverse(u[:, :, i_input]) for i_input in 1:G.input_channels, i_output in 1:G.output_channels] # TODO: avoid this
     fftPSFstmp = [G.fftPSFs[:, :, i_input, i_output] for i_input in 1:G.input_channels, i_output in 1:G.output_channels] # TODO: store on workers
     y = map(to_y, utmp, fftPSFstmp) 
     y = sum(y, dims=1)
@@ -33,9 +31,6 @@ function Base.:(*)(G::Gop, uflat::Vector{Float64})
 
     y[:]
 end
-# fake comment
-using ThreadsX
-#using LoopVectorization
 
 function LinearMaps._unsafe_mul!(yflat::Vector{Float64}, G::Gop, uflat::Vector{Float64})
     u = reshape(uflat, (G.objL, G.objL, G.input_channels))
@@ -49,8 +44,8 @@ function LinearMaps._unsafe_mul!(yflat::Vector{Float64}, G::Gop, uflat::Vector{F
 	outs = Array{AbstractArray}(undef, (G.input_channels, G.output_channels))
 	Threads.@threads for (i_input, i_output) in collect(Iterators.product(1:G.input_channels, 1:G.output_channels))
 		# uncomment for non-reverse
-        # @views out = real.(convolve!(u[:, :, i_input], G.fftPSFs[:, :, i_input, i_output], G.padded[:, :, i_input, i_output]))
-        @views out = real.(convolve!(reverse(u[:, :, i_input]), G.fftPSFs[:, :, i_input, i_output], G.padded[:, :, i_input, i_output]))
+        @views out = real.(convolve!(u[:, :, i_input], G.fftPSFs[:, :, i_input, i_output], G.padded[:, :, i_input, i_output]))
+        #@views out = real.(convolve!(reverse(u[:, :, i_input]), G.fftPSFs[:, :, i_input, i_output], G.padded[:, :, i_input, i_output]))
 		outs[i_input, i_output] = out
 	end
 
@@ -74,8 +69,8 @@ function Base.:(*)(Gt::GopTranspose, yflat::Vector{Float64})
 
     u = sum(u, dims=2)
     # uncomment for non-reverse
-    # u = arrarr_to_multi(u)
-    u = reverse(arrarr_to_multi(u))
+    u = arrarr_to_multi(u)
+    # u = reverse(arrarr_to_multi(u))
     u[:]
 end
 

@@ -5,6 +5,7 @@ module WavePropagation
     using FastChebInterp: ChebPoly
     using Memoize
     using ChainRulesCore: ProjectTo, NoTangent
+    using ThreadsX
     import ChainRulesCore.rrule
 
     export planned_fft, planned_ifft
