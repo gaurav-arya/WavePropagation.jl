@@ -7,7 +7,9 @@ version = "0.1.0"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 FastChebInterp = "cf66c380-9a80-432c-aff8-4f9c79c0bdde"
+LinearMaps = "7a12625a-238d-50fd-b39a-03d52299707e"
 Memoize = "c03570c3-d221-55d1-a50c-7939bbd78826"
+ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
 
 [compat]
 julia = "1"
