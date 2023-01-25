@@ -4,6 +4,7 @@ module WavePropagation
     using FastChebInterp
     using FastChebInterp: ChebPoly
     using Memoize
+    using LinearAlgebra
     using ChainRulesCore: ProjectTo, NoTangent
     import ChainRulesCore.rrule
 
