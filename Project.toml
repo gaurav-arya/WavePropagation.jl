@@ -17,8 +17,6 @@ ChainRulesCore = "1"
 FFTW = "1"
 FastChebInterp = "1"
 Memoize = "0.4"
-FFTW = "1"
-ChainRulesCore = "1"
 julia = "1.9"
 
 [extras]
