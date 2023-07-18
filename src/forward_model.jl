@@ -1,12 +1,12 @@
 using LinearMaps
 
-struct Gop <: LinearMap{Float64}
-    fftPSFs::AbstractArray # todo: fix
+struct Gop{AA1, AA2} <: LinearMap{Float64}
+    fftPSFs::AA1 # todo: fix
     objL::Int
     imgL::Int
     input_channels::Int 
     output_channels::Int
-    padded::AbstractArray
+    padded::AA2
 end   
 
 """
@@ -21,7 +21,7 @@ Note that the operator expepcts flattened input and output.
 """
 function Gop(PSFs, objL, imgL, input_channels, output_channels)
     psfL = objL + imgL
-    fftPSFs = mapslices(fft, PSFs; dims=(1,2))
+    fftPSFs = stack([planned_fft(PSFs[:, :, i_input, i_output]) for i_input in input_channels, i_output in output_channels])
     padded = Array{eltype(fftPSFs)}(undef, psfL, psfL, input_channels, output_channels)
     Gop(fftPSFs, objL, imgL, input_channels, output_channels, padded) 
 end
@@ -37,7 +37,7 @@ function Base.:(*)(G::Gop, uflat::AbstractVector)
     fftPSFstmp = [G.fftPSFs[:, :, i_input, i_output] for i_input in 1:G.input_channels, i_output in 1:G.output_channels] # TODO: store on workers
     y = map(to_y, utmp, fftPSFstmp) 
     y = sum(y, dims=1)
-    y = arrarr_to_multi(y)
+    y = stack(y)
 
     y[:]
 end
@@ -76,7 +76,7 @@ function Base.:(*)(Gt::GopTranspose, yflat::AbstractVector)
     
 
     u = sum(u, dims=2)
-    u = arrarr_to_multi(u)
+    u = stack(u)
     u[:]
 end
 
@@ -93,15 +93,4 @@ function LinearMaps._unsafe_mul!(uflat::AbstractVector, Gt::GopTranspose, yflat:
     end
 
     uflat
-end
-
-
-# Convert array of arrays to multidimensional array
-# using Zygote-friendly operations
-# TODO: this should be replaced by `stack` once 1.9 is properly released
-function arrarr_to_multi(arrarr)
-    outsz = size(arrarr)
-    insz = size(arrarr[1])
-    arrarr = [reshape(inarr, (prod(insz),)) for inarr in arrarr]
-    reshape(vcat(arrarr...), insz..., outsz...)
 end
